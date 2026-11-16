@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 DRIVER_BINDINGS: dict[str, str] = {
     "Ravi": "bangalore.koramangala.*",
     "Priya": "bangalore.indiranagar.*",
@@ -20,31 +22,31 @@ def matches_topic_pattern(pattern: str, routing_key: str) -> bool:
       - '*' matches exactly one dot-delimited word.
       - '#' matches zero or more dot-delimited words.
     """
-    p_tokens = pattern.split(".")
-    k_tokens = routing_key.split(".")
-    p_len, k_len = len(p_tokens), len(k_tokens)
+    pattern_tokens = pattern.split(".")
+    key_tokens = routing_key.split(".")
+    p_count, k_count = len(pattern_tokens), len(key_tokens)
 
-    dp = [[False] * (k_len + 1) for _ in range(p_len + 1)]
-    dp[0][0] = True
+    table: list[list[bool]] = [[False] * (k_count + 1) for _ in range(p_count + 1)]
+    table[0][0] = True
 
-    for i in range(1, p_len + 1):
-        if p_tokens[i - 1] == "#":
-            dp[i][0] = dp[i - 1][0]
+    for row in range(1, p_count + 1):
+        if pattern_tokens[row - 1] == "#":
+            table[row][0] = table[row - 1][0]
 
-    for i in range(1, p_len + 1):
-        token = p_tokens[i - 1]
-        for j in range(1, k_len + 1):
+    for row in range(1, p_count + 1):
+        token = pattern_tokens[row - 1]
+        for col in range(1, k_count + 1):
             if token == "#":
-                dp[i][j] = dp[i - 1][j] or dp[i][j - 1]
-            elif token == "*" or token == k_tokens[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1]
+                table[row][col] = table[row - 1][col] or table[row][col - 1]
+            elif token == "*" or token == key_tokens[col - 1]:
+                table[row][col] = table[row - 1][col - 1]
 
-    return dp[p_len][k_len]
+    return table[p_count][k_count]
 
 
 def route_key_to_drivers(
     routing_key: str,
-    bindings: dict[str, str] | None = None,
+    bindings: Mapping[str, str] | None = None,
 ) -> list[str]:
     """Return all driver names whose binding pattern matches `routing_key`."""
     active_bindings = bindings if bindings is not None else DRIVER_BINDINGS
