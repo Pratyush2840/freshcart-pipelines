@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from sklearn.datasets import load_iris
 
-from iris_project.transformers.check_no_missing import check_data, test_data_quality
-from iris_project.transformers.prepare_data import test_output, transform
+from iris_project.transformers.check_no_missing import (
+    check_data,
+    test_data_quality as verify_data_quality,
+)
+from iris_project.transformers.prepare_data import (
+    test_output as verify_split_output,
+    transform,
+)
 
 
 def test_split_is_80_20() -> None:
@@ -30,6 +36,6 @@ def test_no_rows_lost() -> None:
 def test_quality_and_split_gates_pass() -> None:
     dataset = load_iris(as_frame=True).frame
     checked = check_data(dataset)
-    test_data_quality(checked)
+    verify_data_quality(checked)
     split_df = transform(checked)
-    test_output(split_df)
+    verify_split_output(split_df)
